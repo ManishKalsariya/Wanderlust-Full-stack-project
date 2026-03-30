@@ -1,0 +1,50 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="row mt-3">
+
+
+    <div class="col-8 offset-2">
+
+        <body>
+            <h3>Edit your list</h3>
+            <form method="post" action="/listings/<%= listingggz._id %>?_method=PUT" novalidate class="needs-validation" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+                <label class="form-label" for="title">Title</label>
+                <input class="form-control" value="<%= listingggz.title %>" type="text" name="listing[title]" id="title" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <textarea class="form-control" name="listing[description]" id="description" required><%= listingggz.description %></textarea>
+            </div>
+
+            <div class="mb-3">
+                <p>Original Listing Image</p>
+                <img src="<%= originalImageUrl %>" alt="Preview Image" class="img-thumbnail" style="max-width: 200px;">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="image">Upload New Image</label>
+                <input class="form-control"  name="listing[image][url]" type="file" id="image" >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="price">Price</label>
+                <input class="form-control" value="<%= listingggz.price %>" type="number" name="listing[price]" id="price" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="country">Country</label>
+                <input class="form-control" value="<%= listingggz.country %>" type="text" name="listing[country]" id="country" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="location">Location</label>
+                <input class="form-control" value="<%= listingggz.location %>" type="text" name="listing[location]" id="location" required>
+            </div>
+
+            <button class="btn btn-dark edit-btn mt-3" type="submit">EDIT</button>
+            </form>
+        </body>
+    </div>
+</div>
