@@ -32,13 +32,14 @@ const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
 const dbUrl = process.env.ATLASDB_URL;
+const port = process.env.PORT || 8080;
 
 main()
   .then(() => {
     console.log(" connected to dataBase");
 
-    app.listen(8080, () => {
-      console.log(" listening on port 8080");
+    app.listen(port, () => {
+      console.log(`listening on port ${port}`);
     });
   })
   .catch(err => console.log(" DB connection failed:", err));
