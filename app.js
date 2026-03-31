@@ -44,21 +44,18 @@ async function startServer() {
     await mongoose.connect(dbUrl);
     console.log("✅ Connected to MongoDB");
 
-    // 2️⃣ Session Store (AFTER DB CONNECTS)
+   // Session store FIRST
     const store = MongoStore.create({
       mongoUrl: dbUrl,
       touchAfter: 24 * 60 * 60,
       crypto: {
         secret: process.env.SECRET || "fallbacksecret",
       },
-      autoRemove: "native", // important for stability
+      autoRemove: "native",
     });
 
-    store.on("error", (err) => {
-      console.log("❌ Session Store Error:", err);
-    });
+    store.on("error", (e) => console.log("Session store error", e));
 
-    // 3️⃣ Session config
     const sessionOptions = {
       store,
       secret: process.env.SECRET || "fallbacksecret",
@@ -66,12 +63,11 @@ async function startServer() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // IMPORTANT
+        secure: process.env.NODE_ENV === "production",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       },
     };
 
-    // 4️⃣ Apply session BEFORE passport
     app.use(session(sessionOptions));
     app.use(flash());
 
