@@ -92,30 +92,19 @@ passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
 
 app.use((req, res, next) => {
-    res.locals.success = Array.isArray(req.flash("success")) ? req.flash("success") : [];
-    res.locals.error = Array.isArray(req.flash("error")) ? req.flash("error") : [];
-    res.locals.currUser = req.user || null;
-    next();
+  res.locals.success = req.flash("success") || [];
+  res.locals.error = req.flash("error") || [];
+  res.locals.currUser = req.user || null;
+  next();
 });
 
-app.get("/demouser", async (req,res)=>{
-  let fakeUser = new user({
-    email: "student@apnacollege.com",
-    username:"delta-studentt",
-  });
-  let registeredUser = await user.register(fakeUser,"helloworld");
-  res.send(registeredUser);
-  console.log(registeredUser);
-})
+
 
 app.get("/", (req, res) => {
   res.redirect("/listings");
 });
 
-// index route...
-app.use("/listings/:id/reviews",reviewsRouter);
-app.use("/listings",listingsRouter);
-app.use("/",userRouter);
+
 
 // index route...
 app.use("/listings/:id/reviews",reviewsRouter);
@@ -132,6 +121,9 @@ app.use((req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  let { statusCode = 500, message = "Something went wrong!" } = err;
+  if (res.headersSent) {
+    return next(err);
+  }
+  const { statusCode = 500, message = "Something went wrong!" } = err;
   res.status(statusCode).render("error.ejs", { message });
 });

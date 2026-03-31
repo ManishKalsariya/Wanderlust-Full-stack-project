@@ -1,13 +1,16 @@
 const user = require("../models/user");
 
-module.exports.renderSignUpForm = (req,res)=>{
-    res.render("users/signup.ejs");
+// Render signup page
+module.exports.renderSignUpForm = (req, res) => {
+    return res.render("users/signup.ejs");
 }
 
-module.exports.renderLogInForm = (req,res)=>{
-    res.render("users/login.ejs");
+// Render login page
+module.exports.renderLogInForm = (req, res) => {
+    return res.render("users/login.ejs");
 }
 
+// Sign up a new user
 module.exports.signUp = async (req, res, next) => {
     try {
         const { username, email, password } = req.body;
@@ -20,7 +23,7 @@ module.exports.signUp = async (req, res, next) => {
         const newUser = new user({ username, email });
         const registeredUser = await user.register(newUser, password);
 
-        // Wrap req.login in a promise to avoid callback issues
+        // Wrap req.login in a promise to ensure only one response
         await new Promise((resolve, reject) => {
             req.login(registeredUser, (err) => {
                 if (err) return reject(err);
@@ -29,25 +32,29 @@ module.exports.signUp = async (req, res, next) => {
         });
 
         req.flash("success", "Welcome to Wanderlust!");
-        return res.redirect("/listings");
+        return res.redirect("/listings"); // ✅ always return
 
     } catch (e) {
         req.flash("error", e.message);
-        return res.redirect("/signup");
+        return res.redirect("/signup"); // ✅ always return
     }
 };
 
-module.exports.logIn = (req, res) => {
-    req.flash("success", "Welcome back to Wanderlust!");
-    return res.redirect("/listings");
+// Log in an existing user
+module.exports.logIn = (req, res, next) => {
+    try {
+        req.flash("success", "Welcome back to Wanderlust!");
+        return res.redirect("/listings"); // ✅ always return
+    } catch (err) {
+        return next(err); // handle unexpected errors
+    }
 };
 
-module.exports.logOut = (req,res,next)=>{
-    req.logout((err)=>{
-        if(err){
-            return next(err); // ✅ pass the error
-        }
-        req.flash("success", "Logged Out !");
-        return res.redirect("/login");
-    })
+// Log out a user
+module.exports.logOut = (req, res, next) => {
+    req.logout((err) => {
+        if (err) return next(err); // ✅ propagate error properly
+        req.flash("success", "Logged Out!");
+        return res.redirect("/login"); // ✅ always return
+    });
 };
