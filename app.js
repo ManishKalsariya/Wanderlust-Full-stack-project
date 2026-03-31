@@ -25,6 +25,8 @@ const userRouter = require("./routes/user.js");
 const dbUrl = process.env.ATLASDB_URL;
 const port = process.env.PORT || 8080;
 
+app.set("trust proxy", 1); // important for Render or any proxy setup
+
 // ---------------- VIEW ENGINE ----------------
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -50,8 +52,8 @@ async function startServer() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        secure: false, // 🔥 TEMP FIX (important)
+        maxAge: 1000 * 60 * 60 * 24 * 7,
       },
     };
 
