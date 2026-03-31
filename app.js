@@ -46,11 +46,12 @@ async function startServer() {
 
     // 2️⃣ Session Store (AFTER DB CONNECTS)
     const store = MongoStore.create({
-      client: mongoose.connection.getClient(),
+      mongoUrl: dbUrl,
       touchAfter: 24 * 60 * 60,
       crypto: {
         secret: process.env.SECRET || "fallbacksecret",
       },
+      autoRemove: "native", // important for stability
     });
 
     store.on("error", (err) => {
