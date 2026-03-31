@@ -1,7 +1,7 @@
 if(process.env.NODE_ENV !== "production"){
     require('dotenv').config();
 }
-require('dotenv').config();
+
 
 
 const express = require('express');
@@ -108,7 +108,14 @@ app.get("/demouser", async (req,res)=>{
   console.log(registeredUser);
 })
 
+app.get("/", (req, res) => {
+  res.redirect("/listings");
+});
 
+// index route...
+app.use("/listings/:id/reviews",reviewsRouter);
+app.use("/listings",listingsRouter);
+app.use("/",userRouter);
 
 // index route...
 app.use("/listings/:id/reviews",reviewsRouter);
