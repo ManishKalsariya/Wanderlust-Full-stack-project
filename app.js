@@ -24,11 +24,6 @@ const userRouter = require("./routes/user.js");
 const dbUrl = process.env.ATLASDB_URL;
 const port = process.env.PORT || 8080;
 
-// ----- Mongoose connection -----
-mongoose.connect(dbUrl)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch(err => console.log("❌ DB connection failed:", err));
-
 // ----- View Engine -----
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -39,32 +34,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
-
-// ----- Session Store -----
-const store = MongoStore.create({
-  client: mongoose.connection.getClient(), // Use live mongoose client to avoid null crash
-  touchAfter: 24 * 60 * 60,
-  crypto: {
-    secret: process.env.SECRET,
-  },
-});
-
-store.on("error", (e) => console.log("Session store error", e));
-
-const sessionOptions = {
-  store,
-  secret: process.env.SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    httpOnly: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  },
-};
-
-app.use(session(sessionOptions));
-app.use(flash());
 
 // ----- Passport -----
 app.use(passport.initialize());
@@ -82,27 +51,59 @@ app.use((req, res, next) => {
 });
 
 // ----- Routes -----
-app.get("/", (req, res) => {
-  res.redirect("/listings");
-});
+app.get("/", (req, res) => res.redirect("/listings"));
 
-app.use("/listings/:id/reviews", reviewsRouter);
-app.use("/listings", listingsRouter);
-app.use("/", userRouter);
+// ----- Start Server ONLY after MongoDB connection -----
+async function startServer() {
+  try {
+    await mongoose.connect(dbUrl);
+    console.log("Connected to MongoDB");
 
-// ----- 404 handler -----
-app.use((req, res, next) => {
-  next(new ExpressError(404, "Page Not Found!"));
-});
+    // ----- Session Store -----
+    const store = MongoStore.create({
+      client: mongoose.connection.getClient(), // safe now
+      touchAfter: 24 * 60 * 60,
+      crypto: { secret: process.env.SECRET },
+    });
 
-// ----- Error handler -----
-app.use((err, req, res, next) => {
-  if (res.headersSent) return next(err);
-  const { statusCode = 500, message = "Something went wrong!" } = err;
-  res.status(statusCode).render("error.ejs", { message });
-});
+    store.on("error", (e) => console.log("Session store error", e));
 
-// ----- Start Server -----
-app.listen(port, () => {
-  console.log(`✅ Server listening on port ${port}`);
-});
+    const sessionOptions = {
+      store,
+      secret: process.env.SECRET,
+      resave: false,
+      saveUninitialized: true,
+      cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      },
+    };
+
+    app.use(session(sessionOptions));
+    app.use(flash());
+
+    // ----- Use Routers -----
+    app.use("/listings/:id/reviews", reviewsRouter);
+    app.use("/listings", listingsRouter);
+    app.use("/", userRouter);
+
+    // ----- 404 handler -----
+    app.use((req, res, next) => next(new ExpressError(404, "Page Not Found!")));
+
+    // ----- Error handler -----
+    app.use((err, req, res, next) => {
+      if (res.headersSent) return next(err);
+      const { statusCode = 500, message = "Something went wrong!" } = err;
+      res.status(statusCode).render("error.ejs", { message });
+    });
+
+    // ----- Start Listening -----
+    app.listen(port, () => console.log(`Server listening on port ${port}`));
+
+  } catch (err) {
+    console.log("DB connection failed:", err);
+  }
+}
+
+startServer();
