@@ -27,7 +27,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const user = require("./models/user.js");
 
-const listingsRouter = require("./routes/Listing.js");
+const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
@@ -52,10 +52,10 @@ async function main() {
 
 const store = MongoStore.create({
   mongoUrl: dbUrl,
+  touchAfter: 24*60*60,
   crypto: {
-    secret: process.env.SECRET || "fallbacksecret"
-  },
-  touchAfter: 24 * 60 * 60
+    secret:process.env.SECRET,
+  }
 });
 
 store.on("error", function(e){
@@ -125,9 +125,6 @@ app.use((req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  if (res.headersSent) {
-    return next(err); // ✅ prevents crash
-  }
   let { statusCode = 500, message = "Something went wrong!" } = err;
   res.status(statusCode).render("error.ejs", { message });
 });
