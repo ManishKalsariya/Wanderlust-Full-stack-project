@@ -70,12 +70,13 @@ async function startServer() {
 
     const sessionOptions = {
       store,
-      secret: process.env.SECRET,
+      secret: process.env.SECRET || "thisshouldbeasecret",
       resave: false,
       saveUninitialized: true,
       cookie: {
         httpOnly: true,
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        // secure should be true only if HTTPS
+        secure: process.env.NODE_ENV === "production",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       },
     };
