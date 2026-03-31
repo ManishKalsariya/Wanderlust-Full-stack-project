@@ -52,10 +52,10 @@ async function main() {
 
 const store = MongoStore.create({
   mongoUrl: dbUrl,
-  touchAfter: 24*60*60,
   crypto: {
-    secret:process.env.SECRET,
-  }
+    secret: process.env.SECRET || "fallbacksecret"
+  },
+  touchAfter: 24 * 60 * 60
 });
 
 store.on("error", function(e){
