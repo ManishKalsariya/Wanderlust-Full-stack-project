@@ -9,8 +9,7 @@ const mongoose = require("mongoose");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
+const session = require("express-session"); // ✅ ONLY this (removed connect-mongo)
 const flash = require("connect-flash");
 
 const passport = require("passport");
@@ -44,34 +43,22 @@ async function startServer() {
     await mongoose.connect(dbUrl);
     console.log("✅ Connected to MongoDB");
 
-   // Session store FIRST
-    const store = MongoStore.create({
-      mongoUrl: dbUrl,
-      touchAfter: 24 * 60 * 60,
-      crypto: {
-        secret: process.env.SECRET || "fallbacksecret",
-      },
-      autoRemove: "native",
-    });
-
-    store.on("error", (e) => console.log("Session store error", e));
-
+    // 2️⃣ SESSION (NO MongoStore → no crash)
     const sessionOptions = {
-      store,
       secret: process.env.SECRET || "fallbacksecret",
       resave: false,
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       },
     };
 
     app.use(session(sessionOptions));
     app.use(flash());
 
-    // 5️⃣ Passport setup
+    // 3️⃣ Passport setup
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -79,7 +66,7 @@ async function startServer() {
     passport.serializeUser(User.serializeUser());
     passport.deserializeUser(User.deserializeUser());
 
-    // 6️⃣ Locals middleware
+    // 4️⃣ Locals middleware
     app.use((req, res, next) => {
       res.locals.currUser = req.user || null;
       res.locals.success = req.flash("success") || [];
@@ -108,7 +95,7 @@ async function startServer() {
       res.status(statusCode).render("error.ejs", { message });
     });
 
-    // 7️⃣ Start server LAST
+    // 5️⃣ Start server LAST
     app.listen(port, () => {
       console.log(`✅ Server listening on port ${port}`);
     });
