@@ -5,7 +5,7 @@ module.exports.renderSignUpForm = (req,res)=>{
 }
 
 module.exports.renderLogInForm = (req,res)=>{
-    res.render("users/login.ejs")
+    res.render("users/login.ejs");
 }
 
 module.exports.signUp = async (req, res, next) => {
@@ -20,36 +20,34 @@ module.exports.signUp = async (req, res, next) => {
         const newUser = new user({ username, email });
         const registeredUser = await user.register(newUser, password);
 
-        req.login(registeredUser, (err) => {
-            if (err) return next(err);
-
-            req.flash("success", "Welcome to Wanderlust!");
-            req.session.save(() => {
-                res.redirect("/listings");
+        // Wrap req.login in a promise to avoid callback issues
+        await new Promise((resolve, reject) => {
+            req.login(registeredUser, (err) => {
+                if (err) return reject(err);
+                resolve();
             });
         });
 
+        req.flash("success", "Welcome to Wanderlust!");
+        return res.redirect("/listings");
+
     } catch (e) {
         req.flash("error", e.message);
-        res.redirect("/signup");
+        return res.redirect("/signup");
     }
 };
 
 module.exports.logIn = (req, res) => {
     req.flash("success", "Welcome back to Wanderlust!");
-    req.session.save(() => {
-        res.redirect("/listings");
-    });
+    return res.redirect("/listings");
 };
 
-
-
-  module.exports.logOut = (req,res,next)=>{
+module.exports.logOut = (req,res,next)=>{
     req.logout((err)=>{
         if(err){
-            return next();
+            return next(err); // ✅ pass the error
         }
         req.flash("success", "Logged Out !");
-        res.redirect("/login");
+        return res.redirect("/login");
     })
-}
+};
