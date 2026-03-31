@@ -96,32 +96,39 @@ module.exports.updateListing = async (req, res) => {
     return res.redirect("/listings");
   }
 
-  // Update basic fields
+  // Store old values BEFORE updating
+  const oldLocation = existingListing.location;
+  const oldCountry = existingListing.country;
+
+  // Update fields
   existingListing.set(req.body.listing);
 
-  // Handle new image upload
+  // Handle image
   if (req.file) {
-    existingListing.image = { url: req.file.path, fileName: req.file.filename };
+    existingListing.image = {
+      url: req.file.path,
+      fileName: req.file.filename
+    };
   }
 
-  // Re-geocode if location or country changed
+  // ✅ Correct comparison
   if (
-    req.body.listing.location !== existingListing.location ||
-    req.body.listing.country !== existingListing.country
+    req.body.listing.location !== oldLocation ||
+    req.body.listing.country !== oldCountry
   ) {
     const fullLocation = `${req.body.listing.location}, ${req.body.listing.country}`;
-    let coordinates = [78.9629, 20.5937]; // India fallback
+    let coordinates = [78.9629, 20.5937];
 
     try {
       const geoRes = await axios.get(
         `https://api.maptiler.com/geocoding/${encodeURIComponent(fullLocation)}.json?key=21pyEZsxAMnpEdwx4Lgd`
       );
 
-      if (geoRes.data.features && geoRes.data.features.length > 0) {
-        coordinates = geoRes.data.features[0].geometry.coordinates; // [lng, lat]
+      if (geoRes.data.features.length > 0) {
+        coordinates = geoRes.data.features[0].geometry.coordinates;
       }
     } catch (err) {
-      console.log("Geocoding failed during update, using India fallback:", err.message);
+      console.log("Geocoding failed:", err.message);
     }
 
     existingListing.geometry = { type: "Point", coordinates };
@@ -130,7 +137,7 @@ module.exports.updateListing = async (req, res) => {
   await existingListing.save();
 
   req.flash("success", "Listing updated!");
-  res.redirect(`/listings/${id}`);
+  return res.redirect(`/listings/${id}`); // ✅ add return
 };
 
 module.exports.destroyListing = async (req,res)=>{

@@ -125,6 +125,9 @@ app.use((req, res, next) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err); // ✅ prevents crash
+  }
   let { statusCode = 500, message = "Something went wrong!" } = err;
   res.status(statusCode).render("error.ejs", { message });
 });
