@@ -8,7 +8,7 @@ module.exports.renderLogInForm = (req,res)=>{
     res.render("users/login.ejs")
 }
 
-module.exports.signUp = async (req,res)=>{
+module.exports.signUp = async (req,res,next)=>{
     try{
 
         let {username, email, password} = req.body;
