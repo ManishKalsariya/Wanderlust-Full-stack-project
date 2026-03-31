@@ -91,12 +91,12 @@ passport.use(new LocalStrategy(user.authenticate()));
 passport.serializeUser(user.serializeUser());
 passport.deserializeUser(user.deserializeUser());
 
-app.use((req,res,next) => {  
-  res.locals.success = req.flash("success");
-  res.locals.error = req.flash("error");
-  res.locals.currUser = req.user;
-  next();
-})
+app.use((req, res, next) => {
+    res.locals.success = Array.isArray(req.flash("success")) ? req.flash("success") : [];
+    res.locals.error = Array.isArray(req.flash("error")) ? req.flash("error") : [];
+    res.locals.currUser = req.user || null;
+    next();
+});
 
 app.get("/demouser", async (req,res)=>{
   let fakeUser = new user({
