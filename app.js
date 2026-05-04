@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 
-const session = require("express-session"); // ✅ ONLY this (removed connect-mongo)
+const session = require("express-session"); // ONLY this (removed connect-mongo)
 const flash = require("connect-flash");
 
 const passport = require("passport");
